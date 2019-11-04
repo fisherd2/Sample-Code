@@ -1,0 +1,132 @@
+/*********************************************************************
+* Author: Dallin Fisher
+* This file contains the functionality for the previously declared
+* class Lander. Written in October of 2019. Still incomplete
+**********************************************************************/
+#include "lander.h"
+#include "velocity.h"
+#include "point.h"
+#include "uiDraw.h"
+#include "ground.h"
+
+//Constructor
+Lander::Lander()
+{  
+   point.setY(170);
+   point.setX(195);
+   landed = false;
+   alive = true;
+   fuel = 100;
+   thrust = true;
+   velocity = { -2,0 };
+
+}
+//Getters
+Point Lander::getPoint() const {return point;}
+Velocity Lander::getVelocity() const {return velocity;}
+bool Lander::isAlive() const {return alive;}
+bool Lander::isLanded() const {return landed;}
+int Lander::getFuel() const {return fuel;}
+bool Lander::canThrust() const {return thrust;}
+
+//Setters
+void Lander::setLanded(bool landed) {this->landed = landed;}
+void Lander::setAlive(bool alive) {this->alive = alive;}
+void Lander::setFuel(int fuel) {this->fuel = fuel;}
+void Lander::setThrust(const bool thrust) { this->thrust = thrust; }
+void Lander::setPoint(Point point) { this->point = point; }
+
+//Apply gravity for the y component constantly
+void Lander::applyGravity(float gravity)
+{
+   velocity.setDy(velocity.getDy() - gravity);
+}
+
+//Referenced by game.cpp, when left arrow is used, velocity in the x direction is changed
+void Lander::applyThrustLeft()
+{
+   if (alive == true && landed == false && thrust == true)
+   {
+      setFuel(getFuel()-1);
+      if (velocity.getDx() < 20)
+		  velocity.setDx(velocity.getDx() + .3);
+	  if (velocity.getDx() >= 20 && velocity.getDx() < 30)
+		  velocity.setDx(velocity.getDx() + .2);
+	  if (velocity.getDx() >= 30 && velocity.getDx() < 40)
+		  velocity.setDx(velocity.getDx() + .1);
+	  if (velocity.getDx() >= 40 && velocity.getDx() <= 100)
+		  velocity.setDx(velocity.getDx() + .05);
+	
+   }
+}
+
+//Same as left thruster, but opposite in direction
+void Lander::applyThrustRight()
+{
+   if (alive == true && landed == false && thrust == true)
+   {
+      setFuel(getFuel()-1);
+	  if (velocity.getDx() > -20)
+		velocity.setDx(velocity.getDx() - .3);
+	  if (velocity.getDx() <= -20 && velocity.getDx() > -30)
+		  velocity.setDx(velocity.getDx() - .2);
+	  if (velocity.getDx() <= -30 && velocity.getDx() > -40)
+		  velocity.setDx(velocity.getDx() - .1);
+	  if (velocity.getDx() <= -40 && velocity.getDx() >= -100)
+		  velocity.setDx(velocity.getDx() - .05);
+   }
+}
+
+//Called by game.cpp, when bottom arrow is pushed, the y component of velocity changed by dy
+void Lander::applyThrustBottom()
+{
+	//Depends on how much fuel is left
+   if (alive == true && landed == false && thrust == true)
+   {
+	   if (fuel >= 3)
+	   {
+		   velocity.setDy(velocity.getDy() + .3);
+		   setFuel(getFuel() - 3);
+	   }
+	   if (fuel == 2)
+	   {
+		   velocity.setDy(velocity.getDy() + .2);
+		   setFuel(getFuel() - 2);
+	   }
+	   if (fuel == 1)
+	   {
+		   velocity.setDy(velocity.getDy() + .1);
+		   setFuel(getFuel() - 1);
+	   }
+   }
+}
+
+//Always being called, keeps inertia and gravity always running
+void Lander::advance()
+{
+   point.setX(point.getX() + velocity.getDx());
+   point.setY(point.getY() + velocity.getDy());
+   if (point.getX() >= 199)
+      point.setX(-199);
+   if (point.getX() < -199)
+      point.setX(199);
+   if (fuel <= 0)
+   {
+	   thrust = false;
+	   fuel = 0;
+   }
+   if (landed == true)
+   {
+	   thrust = false;
+   }
+   if (alive == false)
+   {
+	   thrust = false;
+   }
+}
+
+//Keeps drawing the lander after every frame
+void Lander::draw()
+{
+   drawLander(point);
+}
